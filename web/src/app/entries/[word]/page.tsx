@@ -1,68 +1,66 @@
-import React from 'react';
+"use client";
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import entries from '../../../data/all_entries.json';
-import { Metadata } from 'next';
+// import csvData from '../../../data/mixtec.csv';
 
 interface Entry {
-    word: string;
-    translation: string;
-    audio_url?: string | null;
-  }
-
-// NOTE: params is now a Promise due to Next.js 15 async APIs
-type Props = {
-  params: Promise<{ word: string }>;
-};
-
-// This must be async and await params
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { word } = await params;
-  const decodedWord = decodeURIComponent(word);
-  const entry = entries.find((entry: Entry) => entry.word === decodedWord);
-
-  return entry
-    ? {
-        title: entry.word,
-        description: entry.translation,
-      }
-    : {
-        title: 'Entry not found',
-        description: 'The requested entry could not be found.',
-      };
+  word: string;
+  ipa: string;
+  english: string;
 }
 
-// Page component must also await params
-export default async function Page({ params }: Props) {
-  const { word } = await params;
-  const decodedWord = decodeURIComponent(word);
-  const entry = entries.find((entry: Entry) => entry.word === decodedWord);
+const entries: Entry[] = csvData.map((row) => ({
+  word: row.Word || '',
+  ipa: row.IPA || '',
+  english: row.English || '',
+}));
 
-  if (!entry) {
-    return (
-      <div className="container mx-auto py-10 text-center">
-        <p className="text-lg text-gray-600 mb-4">Entry not found.</p>
-        <Link href="/" className="text-blue-500 underline">
-          ← Back to search
-        </Link>
-      </div>
-    );
-  }
+const Dictionary = () => {
+  const [search, setSearch] = useState('');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const filteredEntries = search
+    ? entries.filter((entry: Entry) =>
+        entry.word.toLowerCase().includes(search.toLowerCase()) ||
+        entry.english.toLowerCase().includes(search.toLowerCase()))
+    : [];
 
   return (
-    <div className="container mx-auto py-10 px-4 max-w-2xl">
-      <Link href="/" className="text-blue-500 underline">
-        ← Back to search
-      </Link>
+    <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <h1 className="text-3xl font-bold mb-4">Mixtec-English Dictionary</h1>
+      <input 
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search Mixtec or English..."
+        className="w-full border px-4 py-2 rounded-lg shadow-sm mb-6"
+      />
 
-      <h1 className="text-4xl font-bold mt-4 mb-2">{entry.word}</h1>
-      <p className="text-2xl text-gray-700 mb-6">{entry.translation}</p>
-
-      {entry.audio_url && (
-        <audio controls className="w-full">
-          <source src={entry.audio_url} type="audio/mpeg" />
-          Your browser does not support the audio element.
-        </audio>
+      {!search && (
+        <p className="text-center text-gray-600">Type to search the dictionary.</p>
       )}
+
+      {search && filteredEntries.length === 0 && (
+        <p className="text-center text-gray-600">No results found.</p>
+      )}
+
+      <ul className="space-y-3">
+        {filteredEntries.map((entry: Entry, idx: number) => (
+          <li key={idx} className="border p-3 rounded-lg hover:bg-gray-50">
+            <Link href={`/entries/${encodeURIComponent(entry.word)}`} className="block">
+              <h2 className="text-lg font-semibold text-blue-600 hover:underline">
+                {entry.word}
+              </h2>
+              <p className="text-gray-500">[{entry.ipa}]</p>
+              <p className="text-gray-600">{entry.english}</p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <audio ref={audioRef} className="hidden" />
     </div>
   );
-}
+};
+
+export default Dictionary;

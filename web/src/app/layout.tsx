@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tuvan-English Dictionary",
+  title: "Mixtec-English Dictionary",
   description: "An online Tuvan-English dictionary.",
 };
 
