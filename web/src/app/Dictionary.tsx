@@ -14,6 +14,17 @@ interface Entry {
   semanticDomain: string;
 }
 
+interface CSVRow {
+  Word: string;
+  'Orthography w/ tones': string;
+  IPA: string;
+  English: string;
+  Spanish: string;
+  'Tone Melody': string;
+  'Part of Speech': string;
+  'Semantic Domain': string;
+}
+
 const Dictionary = () => {
   const [search, setSearch] = useState('');
   const [searchLanguage, setSearchLanguage] = useState('English'); // Default to English
@@ -37,7 +48,7 @@ const Dictionary = () => {
           header: true,
           skipEmptyLines: true,
         });
-        const parsedEntries = parsed.data.map((row: any) => ({
+        const parsedEntries = parsed.data.map((row: CSVRow) => ({
           word: row.Word,
           orthography: row['Orthography w/ tones'],
           ipa: row.IPA,
@@ -67,7 +78,7 @@ const Dictionary = () => {
         // You might want to set an error state here to display to the user
       });
   }, []);
-  
+
   const filteredEntries = entries.filter((entry: Entry) => {
     const query = search.toLowerCase();
 
