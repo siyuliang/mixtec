@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Papa from 'papaparse';
 
 interface Entry {
   word: string;
@@ -12,17 +11,6 @@ interface Entry {
   tone: string;
   partOfSpeech: string;
   semanticDomain: string;
-}
-
-interface CSVRow {
-  Word: string;
-  'Orthography w/ tones': string;
-  IPA: string;
-  English: string;
-  Spanish: string;
-  'Tone Melody': string;
-  'Part of Speech': string;
-  'Semantic Domain': string;
 }
 
 const Dictionary = () => {
@@ -44,37 +32,39 @@ const Dictionary = () => {
         return response.text();
       })
       .then((csvText) => {
-        const parsed = Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: true,
+        const rows = csvText.split('\n'); // Split CSV into rows
+        const headers = rows[0].split(','); // Extract headers from the first row
+        const data = rows.slice(1).map((row) => {
+          const values = row.split(',');
+          const entry: Entry = {
+            word: values[headers.indexOf('Word')] || '',
+            orthography: values[headers.indexOf('Orthography w/ tones')] || '',
+            ipa: values[headers.indexOf('IPA')] || '',
+            english: values[headers.indexOf('English')] || '',
+            spanish: values[headers.indexOf('Spanish')] || '',
+            tone: values[headers.indexOf('Tone Melody')] || '',
+            partOfSpeech: values[headers.indexOf('Part of Speech')] || '',
+            semanticDomain: values[headers.indexOf('Semantic Domain')] || '',
+          };
+          return entry;
         });
-        const parsedEntries = parsed.data.map((row: CSVRow) => ({
-          word: row.Word,
-          orthography: row['Orthography w/ tones'],
-          ipa: row.IPA,
-          english: row.English,
-          spanish: row.Spanish,
-          tone: row['Tone Melody'],
-          partOfSpeech: row['Part of Speech'],
-          semanticDomain: row['Semantic Domain'],
-        }));
-  
-        setEntries(parsedEntries);
-  
+
+        setEntries(data);
+
         // Extract unique semantic domains
         const uniqueDomains = Array.from(
-          new Set(parsedEntries.map((entry: Entry) => entry.semanticDomain))
+          new Set(data.map((entry) => entry.semanticDomain))
         ).filter((domain) => domain); // Remove empty values
         setDomains(uniqueDomains);
-  
+
         // Extract unique parts of speech
         const uniquePartsOfSpeech = Array.from(
-          new Set(parsedEntries.map((entry: Entry) => entry.partOfSpeech))
+          new Set(data.map((entry) => entry.partOfSpeech))
         ).filter((pos) => pos); // Remove empty values
         setPartsOfSpeech(uniquePartsOfSpeech);
       })
-      .catch(error => {
-        console.error("Error loading dictionary data:", error);
+      .catch((error) => {
+        console.error('Error loading dictionary data:', error);
         // You might want to set an error state here to display to the user
       });
   }, []);
