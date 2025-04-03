@@ -1,22 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  webpack: (config) => {
-    config.module.rules.push({
-      test: /\.csv$/,
-      use: [
-        {
-          loader: 'csv-loader',
-          options: {
-            dynamicTyping: true,
-            header: true,
-            skipEmptyLines: true,
-          },
-        },
-      ],
-    });
-    return config;
-  },
+  reactStrictMode: true,
+  // If you're using the app router in Next.js 13+
+  output: 'standalone', // This can help with Vercel deployments
 }
 
 module.exports = nextConfig

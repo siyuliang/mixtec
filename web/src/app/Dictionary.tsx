@@ -26,7 +26,12 @@ const Dictionary = () => {
   useEffect(() => {
     // Load and parse the CSV file
     fetch('/data/mixtec.csv')
-      .then((response) => response.text())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
+        }
+        return response.text();
+      })
       .then((csvText) => {
         const parsed = Papa.parse(csvText, {
           header: true,
@@ -42,23 +47,27 @@ const Dictionary = () => {
           partOfSpeech: row['Part of Speech'],
           semanticDomain: row['Semantic Domain'],
         }));
-
+  
         setEntries(parsedEntries);
-
+  
         // Extract unique semantic domains
         const uniqueDomains = Array.from(
           new Set(parsedEntries.map((entry: Entry) => entry.semanticDomain))
         ).filter((domain) => domain); // Remove empty values
         setDomains(uniqueDomains);
-
+  
         // Extract unique parts of speech
         const uniquePartsOfSpeech = Array.from(
           new Set(parsedEntries.map((entry: Entry) => entry.partOfSpeech))
         ).filter((pos) => pos); // Remove empty values
         setPartsOfSpeech(uniquePartsOfSpeech);
+      })
+      .catch(error => {
+        console.error("Error loading dictionary data:", error);
+        // You might want to set an error state here to display to the user
       });
   }, []);
-
+  
   const filteredEntries = entries.filter((entry: Entry) => {
     const query = search.toLowerCase();
 
